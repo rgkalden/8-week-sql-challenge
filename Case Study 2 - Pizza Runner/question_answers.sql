@@ -93,3 +93,30 @@ FROM customer_orders_clean
 GROUP BY day_of_week
 ORDER BY day_of_week;
 
+
+# B. Runner and Customer Experience
+
+#    How many runners signed up for each 1 week period? (i.e. week starts 2021-01-01)
+
+SELECT WEEK(registration_date, 1) AS week_number, COUNT(runner_id) 
+FROM runners
+GROUP BY week_number;
+
+#    What was the average time in minutes it took for each runner to arrive at the Pizza Runner HQ to pickup the order?
+
+SELECT runner_id, AVG(timestampdiff(MINUTE, order_time, pickup_time)) AS avg_time
+FROM customer_orders_clean c
+JOIN runner_orders_clean r ON c.order_id = r.order_id
+WHERE pickup_time IS NOT NULL
+GROUP BY runner_id;
+
+#    Is there any relationship between the number of pizzas and how long the order takes to prepare?
+
+
+
+#    What was the average distance travelled for each customer?
+#    What was the difference between the longest and shortest delivery times for all orders?
+#    What was the average speed for each runner for each delivery and do you notice any trend for these values?
+#    What is the successful delivery percentage for each runner?
+
+
