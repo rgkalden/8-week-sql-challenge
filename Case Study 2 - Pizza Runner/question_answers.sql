@@ -112,11 +112,56 @@ GROUP BY runner_id;
 
 #    Is there any relationship between the number of pizzas and how long the order takes to prepare?
 
+SELECT num_pizzas, AVG(prep_time)
+FROM (
+	SELECT c.order_id, 
+		   COUNT(pizza_id) AS num_pizzas,
+		   timestampdiff(MINUTE, order_time, pickup_time) AS prep_time
+	FROM customer_orders_clean c
+	JOIN runner_orders_clean r ON c.order_id = r.order_id
+	WHERE pickup_time IS NOT NULL
+	GROUP BY c.order_id
+) AS temp
+GROUP BY num_pizzas;
 
 
 #    What was the average distance travelled for each customer?
+
+SELECT customer_id, AVG(distance)
+FROM customer_orders_clean c
+JOIN runner_orders_clean r ON c.order_id = r.order_id
+WHERE pickup_time IS NOT NULL
+GROUP BY customer_id;
+
 #    What was the difference between the longest and shortest delivery times for all orders?
+
+SELECT MAX(duration) - MIN(duration)
+FROM customer_orders_clean c
+JOIN runner_orders_clean r ON c.order_id = r.order_id
+WHERE pickup_time IS NOT NULL;
+
 #    What was the average speed for each runner for each delivery and do you notice any trend for these values?
+
+SELECT c.order_id, 
+	   c.customer_id,
+       r.runner_id,
+       COUNT(pizza_id) AS num_pizzas,
+       distance / (duration / 60) AS avg_speed
+FROM customer_orders_clean c
+JOIN runner_orders_clean r ON c.order_id = r.order_id
+WHERE pickup_time IS NOT NULL
+GROUP BY c.order_id;
+
 #    What is the successful delivery percentage for each runner?
 
-
+SELECT runner_id, 
+	   SUM(success) / COUNT(success) * 100 AS success_delivery_percent
+FROM (
+	SELECT runner_id,
+		   CASE
+			WHEN pickup_time IS NULL THEN 0
+			ELSE 1
+		   END AS success
+	FROM runner_orders_clean
+) AS temp
+GROUP BY runner_id;
