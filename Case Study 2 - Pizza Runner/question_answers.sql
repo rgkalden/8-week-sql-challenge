@@ -165,3 +165,105 @@ FROM (
 	FROM runner_orders_clean
 ) AS temp
 GROUP BY runner_id;
+
+
+# C. Ingredient Optimisation
+
+#    What are the standard ingredients for each pizza?
+
+SELECT pizza_names.pizza_id, pizza_name, toppings 
+FROM pizza_recipes
+JOIN pizza_names ON pizza_recipes.pizza_id = pizza_names.pizza_id;
+
+#    What was the most commonly added extra?
+
+# Work in progress
+SELECT *,
+	SUBSTRING_INDEX(extras, ',', 1) AS extras1,
+    substring_index(extras, ',', -1) AS extras2
+FROM customer_orders_clean
+WHERE extras IS NOT NULL;
+
+#    What was the most common exclusion?
+
+
+
+#    Generate an order item for each record in the customers_orders table in the format of one of the following:
+#        Meat Lovers
+#        Meat Lovers - Exclude Beef
+#        Meat Lovers - Extra Bacon
+#        Meat Lovers - Exclude Cheese, Bacon - Extra Mushroom, Peppers
+
+
+
+#    Generate an alphabetically ordered comma separated ingredient list for each pizza order from the customer_orders table and add a 2x in front of any relevant ingredients
+#        For example: "Meat Lovers: 2xBacon, Beef, ... , Salami"
+
+
+
+#    What is the total quantity of each ingredient used in all delivered pizzas sorted by most frequent first?
+
+
+# D. Pricing and Ratings
+
+#    If a Meat Lovers pizza costs $12 and Vegetarian costs $10 and there were no charges for changes 
+#    - how much money has Pizza Runner made so far if there are no delivery fees?
+
+SELECT 
+	SUM(pizza_cost) AS revenue
+FROM (
+	SELECT
+		pizza_name,
+		CASE
+			WHEN pizza_name = 'Meatlovers' THEN 12
+			WHEN pizza_name = 'Vegetarian' THEN 10
+		END AS pizza_cost
+	FROM customer_orders_clean
+	JOIN pizza_names ON pizza_names.pizza_id = customer_orders_clean.pizza_id
+    JOIN runner_orders_clean ON runner_orders_clean.order_id = customer_orders_clean.order_id
+    WHERE pickup_time IS NOT NULL
+) AS temp;
+
+#    What if there was an additional $1 charge for any pizza extras?
+#        Add cheese is $1 extra
+
+SELECT 
+	SUM(pizza_cost + num_extras * 1) AS revenue
+FROM (
+	SELECT
+		pizza_name,
+        extras,
+		CASE
+			WHEN pizza_name = 'Meatlovers' THEN 12
+			WHEN pizza_name = 'Vegetarian' THEN 10
+		END AS pizza_cost,
+        CASE
+			WHEN extras LIKE '_' THEN 1
+            WHEN extras LIKE '%,%' THEN LENGTH(REPLACE(extras, ', ', ''))
+            ELSE 0
+		END AS num_extras
+	FROM customer_orders_clean
+	JOIN pizza_names ON pizza_names.pizza_id = customer_orders_clean.pizza_id
+    JOIN runner_orders_clean ON runner_orders_clean.order_id = customer_orders_clean.order_id
+    WHERE pickup_time IS NOT NULL
+) AS temp;
+
+#    The Pizza Runner team now wants to add an additional ratings system that allows customers to rate their runner, how would you design an additional table for this new dataset - generate a schema for this new table and insert your own data for ratings for each successful customer order between 1 to 5.
+
+
+
+#    Using your newly generated table - can you join all of the information together to form a table which has the following information for successful deliveries?
+#        customer_id
+#        order_id
+#        runner_id
+#        rating
+#        order_time
+#        pickup_time
+#        Time between order and pickup
+#        Delivery duration
+#        Average speed
+#        Total number of pizzas
+
+
+
+#    If a Meat Lovers pizza was $12 and Vegetarian $10 fixed prices with no cost for extras and each runner is paid $0.30 per kilometre traveled - how much money does Pizza Runner have left over after these deliveries?
