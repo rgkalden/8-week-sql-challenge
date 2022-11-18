@@ -248,9 +248,31 @@ FROM (
     WHERE pickup_time IS NOT NULL
 ) AS temp;
 
-#    The Pizza Runner team now wants to add an additional ratings system that allows customers to rate their runner, how would you design an additional table for this new dataset - generate a schema for this new table and insert your own data for ratings for each successful customer order between 1 to 5.
+#    The Pizza Runner team now wants to add an additional ratings system that allows customers to rate their runner,
+#    how would you design an additional table for this new dataset - 
+#    generate a schema for this new table and insert your own data for ratings for each successful 
+#    customer order between 1 to 5.
 
+DROP TABLE IF EXISTS runner_ratings;
+CREATE TABLE runner_ratings (
+  rating_id INTEGER,
+  order_id INTEGER,
+  runner_id INTEGER,
+  rating_time DATETIME,
+  rating INTEGER
+);
 
+INSERT INTO runner_ratings
+  (rating_id, order_id, runner_id, rating_time, rating)
+VALUES
+  ('1', '1', '1', '2020-01-01 18:15:34', '5'),
+  ('2', '2', '1', '2020-01-01 19:10:54', '4'),
+  ('3', '3', '1', '2020-01-03 00:12:37', '3'),
+  ('4', '4', '2', '2020-01-04 13:53:03', '5'),
+  ('5', '5', '3', '2020-01-08 21:10:57', '5'),
+  ('6', '7', '2', '2020-01-08 21:30:45', '4'),
+  ('7', '8', '2', '2020-01-10 00:15:02', '2'),
+  ('8', '10', '1', '2020-01-11 18:50:20', '5');
 
 #    Using your newly generated table - can you join all of the information together to form a table which has the following information for successful deliveries?
 #        customer_id
@@ -264,6 +286,61 @@ FROM (
 #        Average speed
 #        Total number of pizzas
 
+SELECT
+	customer_id,
+    co.order_id,
+    ro.runner_id,
+    rating,
+    order_time,
+    pickup_time,
+    timestampdiff(MINUTE, order_time, pickup_time) AS prep_time,
+    duration,
+    distance / (duration / 60) AS avg_speed,
+    COUNT(pizza_id) AS num_pizzas
+FROM customer_orders_clean co
+JOIN runner_orders_clean ro ON co.order_id = ro.order_id
+JOIN runner_ratings rr ON rr.order_id = co.order_id
+GROUP BY co.customer_id, co.order_id;
+
+#    If a Meat Lovers pizza was $12 and Vegetarian $10 fixed prices with no cost for extras and each runner is 
+#	 paid $0.30 per kilometre traveled - how much money does Pizza Runner have left over after these deliveries?
+
+SELECT 
+	SUM(pizza_cost) - SUM(runner_cost)
+FROM (
+	SELECT
+		pizza_name,
+		CASE
+			WHEN pizza_name = 'Meatlovers' THEN 12
+			WHEN pizza_name = 'Vegetarian' THEN 10
+		END AS pizza_cost,
+        distance,
+        distance * 0.30 AS runner_cost
+	FROM customer_orders_clean
+	JOIN pizza_names ON pizza_names.pizza_id = customer_orders_clean.pizza_id
+    JOIN runner_orders_clean ON runner_orders_clean.order_id = customer_orders_clean.order_id
+    WHERE pickup_time IS NOT NULL AND distance IS NOT NULL
+) AS temp;
+
+# E. Bonus Questions
+
+# If Danny wants to expand his range of pizzas - how would this impact the existing data design? 
+# Write an INSERT statement to demonstrate what would happen if a new Supreme pizza with all the 
+# toppings was added to the Pizza Runner menu?
+
+INSERT INTO pizza_names
+  (pizza_id, pizza_name)
+VALUES
+  (3, 'Supreme');
+  
+INSERT INTO pizza_recipes
+(pizza_id, toppings)
+VALUES
+  (3, '1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12');
+  
+SELECT pizza_names.pizza_id, pizza_name, toppings
+FROM pizza_names
+JOIN pizza_recipes ON pizza_names.pizza_id = pizza_recipes.pizza_id
 
 
-#    If a Meat Lovers pizza was $12 and Vegetarian $10 fixed prices with no cost for extras and each runner is paid $0.30 per kilometre traveled - how much money does Pizza Runner have left over after these deliveries?
+
