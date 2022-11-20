@@ -116,21 +116,73 @@ ORDER BY plan_id;
 
 #    How many customers have upgraded to an annual plan in 2020?
 
-
+SELECT COUNT(distinct customer_id)
+FROM subscriptions
+WHERE plan_id = 3 AND YEAR(start_date) = 2020;
 
 #    How many days on average does it take for a customer to an annual plan from the day they join Foodie-Fi?
 
+WITH 
+trial_plan AS (
+	SELECT customer_id, start_date AS trial_start FROM subscriptions WHERE plan_id = 0
+),
+annual_plan AS (
+	SELECT customer_id, start_date AS annual_start FROM subscriptions WHERE plan_id = 3
+)
 
+SELECT 
+	AVG(DATEDIFF(annual_start, trial_start)) AS avg_days
+FROM trial_plan tp
+JOIN annual_plan ap ON tp.customer_id = ap.customer_id;
 
 #    Can you further breakdown this average value into 30 day periods (i.e. 0-30 days, 31-60 days etc)
 
+WITH 
+trial_plan AS (
+	SELECT customer_id, start_date AS trial_start FROM subscriptions WHERE plan_id = 0
+),
+annual_plan AS (
+	SELECT customer_id, start_date AS annual_start FROM subscriptions WHERE plan_id = 3
+),
+days_to_upgrade AS (
+	SELECT
+		tp.customer_id,
+		DATEDIFF(annual_start, trial_start) AS days_to_upgrade
+	FROM trial_plan tp
+	JOIN annual_plan ap ON tp.customer_id = ap.customer_id
+)
 
+SELECT 
+	bucket,
+	COUNT(customer_id)
+FROM (
+SELECT
+	customer_id, 
+	CASE
+		WHEN days_to_upgrade <= 30 THEN '0 to 30 days'
+        WHEN days_to_upgrade > 30 AND days_to_upgrade <= 60 THEN '30 to 60 days'
+        WHEN days_to_upgrade > 60 AND days_to_upgrade <= 90 THEN '60 to 90 days'
+        WHEN days_to_upgrade > 90 THEN '90 days or more'
+	END AS bucket
+FROM days_to_upgrade
+) AS temp
+GROUP BY bucket
+ORDER BY bucket;
 
 #    How many customers downgraded from a pro monthly to a basic monthly plan in 2020?
 
-
-
-
-
-
-
+SELECT
+	COUNT(*) AS num_downgraded
+FROM (
+SELECT 
+	customer_id,
+    plans.plan_id,
+    plan_name,
+    start_date,
+    LEAD(plans.plan_id, 1) OVER(PARTITION BY customer_id ORDER BY plan_id) AS next_plan
+FROM plans
+JOIN subscriptions on subscriptions.plan_id = plans.plan_id
+) AS next_plans
+WHERE YEAR(start_date) = 2020
+	AND plan_id = 2
+    AND next_plan = 1;
