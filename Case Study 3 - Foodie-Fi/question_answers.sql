@@ -200,3 +200,29 @@ WHERE YEAR(start_date) = 2020
 #		starts at the end of the month period
 #    once a customer churns they will no longer make payments
 
+
+SELECT 
+	customer_id, 
+    plan_id, 
+    plan_name, 
+    start_date AS payment_date,
+	price AS amount
+FROM
+(
+	SELECT 
+		customer_id, 
+        plans.plan_id, 
+        plan_name, 
+        price, 
+        start_date 
+	FROM plans
+	JOIN subscriptions ON subscriptions.plan_id = plans.plan_id
+	ORDER BY customer_id, start_date
+) AS temp;
+
+
+WITH RECURSIVE nrows(date) AS (
+SELECT MAKEDATE(2021,333) UNION ALL 
+SELECT DATE_ADD(date,INTERVAL 1 day) FROM nrows WHERE  date<=CURRENT_DATE
+)
+SELECT date FROM nrows;
