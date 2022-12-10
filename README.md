@@ -26,7 +26,9 @@ Information about each case study is provided in this README.
 
 ## Technical Information
 
-MySQL Community Server and MySQL Workbench are used to create the databases and run queries for the case studies. 
+MySQL Community Server and MySQL Workbench are used to create the databases and run queries for cases 1-3 (Case 3 uses Postgres to answer the question for Part C).
+
+Postgres and pgAdmin are used for Case 4 onwards.
 
 ## Case Study 1 - Danny's Diner
 
@@ -184,8 +186,6 @@ B. Data Analysis Questions
 11. How many customers downgraded from a pro monthly to a basic monthly plan in 2020?
 
 C. Challenge Payment Question
-
-> In progress
 
 The Foodie-Fi team wants you to create a new payments table for the year 2020 that includes amounts paid by each customer in the subscriptions table with the following requirements:
 
