@@ -138,20 +138,40 @@ ORDER BY month;
 
 --     What is the closing balance for each customer at the end of the month?
 
--- work in progress
+WITH monthly_balances AS (
 SELECT
 	*,
-	SUM(txn_amount_signed) OVER(PARTITION BY customer_id, month) AS balance
+	SUM(txn_amount_signed) OVER(PARTITION BY customer_id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS balance
 FROM (
-SELECT
-	*,
-	EXTRACT(MONTH FROM txn_date) AS month,
-	CASE
-		WHEN txn_type != 'deposit' THEN -1 * txn_amount
-		ELSE txn_amount
-	END AS txn_amount_signed
-FROM customer_transactions
+	SELECT
+		*,
+		EXTRACT(MONTH FROM txn_date) AS month,
+		CASE
+			WHEN txn_type != 'deposit' THEN -1 * txn_amount
+			ELSE txn_amount
+		END AS txn_amount_signed
+	FROM customer_transactions
+	ORDER BY customer_id, month, txn_date
 ) AS temp
-ORDER BY customer_id, month;
+)
+
+SELECT 
+	customer_id,
+	month,
+	balance AS closing_balance
+FROM (
+	SELECT
+		customer_id,
+		txn_date,
+		month,
+		balance,
+		ROW_NUMBER() OVER(PARTITION BY customer_id, month ORDER BY txn_date DESC) AS row_num
+	FROM monthly_balances
+) AS temp
+WHERE row_num = 1;
+
 
 --     What is the percentage of customers who increase their closing balance by more than 5%?
+
+
+
