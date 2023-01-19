@@ -97,11 +97,81 @@ SELECT
 FROM clean_weekly_sales
 GROUP BY platform, month_number
 ORDER BY month_number
+),
+
+total_monthly_sales AS (
+SELECT 
+	month_number, 
+	SUM(sales) AS total_sales
+FROM monthly_platform_sales 
+GROUP BY month_number
 )
 
-
-SELECT month_number, SUM(sales) FROM monthly_platform_sales GROUP BY month_number
+SELECT 
+	m.month_number,
+	platform,
+	sales,
+	ROUND(sales / total_sales * 100, 1) AS percentage
+FROM monthly_platform_sales m
+JOIN total_monthly_sales t ON m.month_number = t.month_number;
 
 --    What is the percentage of sales by demographic for each year in the dataset?
+
+WITH yearly_demographic_sales AS (
+SELECT
+	calendar_year,
+	demographic,
+	SUM(sales) AS sales
+FROM clean_weekly_sales
+GROUP BY calendar_year, demographic
+ORDER BY calendar_year, demographic
+),
+
+total_yearly_sales AS (
+SELECT 
+	calendar_year, 
+	SUM(sales) AS total_sales
+FROM clean_weekly_sales
+GROUP BY calendar_year
+)
+
+SELECT 
+	y.calendar_year,
+	demographic,
+	sales,
+	sales / total_sales :: float * 100 AS percentage
+FROM yearly_demographic_sales y
+JOIN total_yearly_sales t ON y.calendar_year = t.calendar_year;
+
 --    Which age_band and demographic values contribute the most to Retail sales?
---    Can we use the avg_transaction column to find the average transaction size for each year for Retail vs Shopify? If not - how would you calculate it instead?
+
+SELECT
+	age_band,
+	demographic,
+	SUM(sales) AS total_sales
+FROM clean_weekly_sales
+WHERE platform = 'Retail' AND age_band != 'unknown'
+GROUP BY age_band, demographic
+ORDER BY total_sales DESC;
+
+--    Can we use the avg_transaction column to find the average transaction size for each year for Retail vs Shopify? 
+--    If not - how would you calculate it instead?
+
+-- No, cannot take the average of an average. Instead:
+
+WITH yearly_totals AS (
+SELECT
+	calendar_year,
+	platform,
+	SUM(transactions) AS total_transactions,
+	SUM(sales) AS total_sales
+FROM clean_weekly_sales
+GROUP BY calendar_year, platform
+ORDER BY calendar_year, platform
+)
+
+SELECT
+	calendar_year,
+	platform,
+	total_sales / total_transactions AS avg_transaction_size
+FROM yearly_totals;
