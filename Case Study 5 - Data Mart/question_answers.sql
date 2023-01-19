@@ -175,3 +175,83 @@ SELECT
 	platform,
 	total_sales / total_transactions AS avg_transaction_size
 FROM yearly_totals;
+
+
+-- 3. Before & After Analysis
+
+/*
+This technique is usually used when we inspect an important event and want to inspect the impact 
+before and after a certain point in time.
+
+Taking the week_date value of 2020-06-15 as the baseline week where the Data Mart 
+sustainable packaging changes came into effect.
+
+We would include all week_date values for 2020-06-15 as the start of the period after the change 
+and the previous week_date values would be before
+
+Using this analysis approach - answer the following questions:
+*/
+
+--    What is the total sales for the 4 weeks before and after 2020-06-15? What is the growth or reduction rate 
+--	  in actual values and percentage of sales?
+
+SELECT DISTINCT week_number
+FROM clean_weekly_sales
+WHERE week_day = '2020-06-15';
+-- Week number is 25
+
+WITH time_periods AS (
+SELECT
+	week_day,
+	week_number,
+	CASE
+		WHEN week_number >= 21 AND week_number < 25 THEN 'Before'
+		WHEN week_number >= 25 AND week_number < 29 THEN 'After'
+		ELSE NULL
+	END AS time_period,
+	sales
+FROM clean_weekly_sales
+WHERE calendar_year = '2020'
+)
+
+SELECT
+	*,
+	(total_sales - LEAD(total_sales) OVER (ORDER BY time_period)) / LEAD(total_sales) OVER (ORDER BY time_period) :: float * 100 AS percentage_growth
+FROM (
+SELECT
+	time_period,
+	SUM(sales) AS total_sales
+FROM time_periods
+GROUP BY time_period
+HAVING time_period IS NOT NULL) AS temp;
+
+
+--    What about the entire 12 weeks before and after?
+
+WITH time_periods AS (
+SELECT
+	week_day,
+	week_number,
+	CASE
+		WHEN week_number >= 13 AND week_number < 25 THEN 'Before'
+		WHEN week_number >= 25 AND week_number < 37 THEN 'After'
+		ELSE NULL
+	END AS time_period,
+	sales
+FROM clean_weekly_sales
+WHERE calendar_year = '2020'
+)
+
+SELECT
+	*,
+	(total_sales - LEAD(total_sales) OVER (ORDER BY time_period)) / LEAD(total_sales) OVER (ORDER BY time_period) :: float * 100 AS percentage_growth
+FROM (
+SELECT
+	time_period,
+	SUM(sales) AS total_sales
+FROM time_periods
+GROUP BY time_period
+HAVING time_period IS NOT NULL) AS temp;
+
+
+
