@@ -419,6 +419,12 @@ CREATE TABLE campaign_analysis AS (
 				ELSE 0
 			END
 		) AS impression,
+		SUM(
+			CASE
+				WHEN event_name = 'Ad Click' THEN 1
+				ELSE 0
+			END
+		) AS click,
 		cart_items	
 	FROM events_users_pages
 	LEFT JOIN cart_items_added ON cart_items_added.visit_id = events_users_pages.visit_id
@@ -439,10 +445,10 @@ SELECT * FROM campaign_analysis;
 --     Does clicking on an impression lead to higher purchase rates?
 --     What is the uplift in purchase rate when comparing users who click on a campaign impression versus 
 --     		users who do not receive an impression? What if we compare them with users who just an impression but do not click?
---     What metrics can you use to quantify the success or failure of each campaign compared to each other?
 
 SELECT
 	impression,
+	click,
 	COUNT(DISTINCT visit_id) AS total_visits,
 	COUNT(DISTINCT user_id) AS total_users,
 	SUM(page_views) AS total_views,
@@ -450,7 +456,9 @@ SELECT
 	SUM(purchase) AS total_purchases,
 	SUM(purchase) / COUNT(DISTINCT visit_id) :: float * 100 AS purchase_visit_ratio
 FROM campaign_analysis
-GROUP BY impression;
+GROUP BY impression, click;
+
+--     What metrics can you use to quantify the success or failure of each campaign compared to each other?
 
 SELECT
 	campaign_name,
