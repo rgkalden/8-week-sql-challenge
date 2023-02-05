@@ -439,5 +439,29 @@ SELECT * FROM campaign_analysis;
 --     Does clicking on an impression lead to higher purchase rates?
 --     What is the uplift in purchase rate when comparing users who click on a campaign impression versus 
 --     		users who do not receive an impression? What if we compare them with users who just an impression but do not click?
---     What metrics can you use to quantify the success or failure of each campaign compared to eachother?
+--     What metrics can you use to quantify the success or failure of each campaign compared to each other?
 
+SELECT
+	impression,
+	COUNT(DISTINCT visit_id) AS total_visits,
+	COUNT(DISTINCT user_id) AS total_users,
+	SUM(page_views) AS total_views,
+	SUM(cart_adds) AS total_cart_adds,
+	SUM(purchase) AS total_purchases,
+	SUM(purchase) / COUNT(DISTINCT visit_id) :: float * 100 AS purchase_visit_ratio
+FROM campaign_analysis
+GROUP BY impression;
+
+SELECT
+	campaign_name,
+	COUNT(DISTINCT visit_id) AS total_visits,
+	COUNT(DISTINCT user_id) AS total_users,
+	SUM(page_views) AS total_views,
+	SUM(cart_adds) AS total_cart_adds,
+	SUM(purchase) AS total_purchases,
+	SUM(purchase) / COUNT(DISTINCT visit_id) :: float * 100 AS purchase_visit_ratio,
+	SUM(cart_adds)/ SUM(page_views) :: float * 100 AS cart_conversion_ratio,
+	SUM(purchase) / SUM(cart_adds) :: float * 100 AS purchase_conversion_ratio
+FROM campaign_analysis
+GROUP BY campaign_name
+ORDER BY purchase_visit_ratio DESC;
