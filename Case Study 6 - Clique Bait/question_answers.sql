@@ -132,7 +132,12 @@ WITH purchase_flag AS (
 
 SELECT
 	page_name,
-	COUNT(page_name) AS num_purchases
+	sum(
+		CASE
+			WHEN e.event_type = 2 THEN 1
+			ELSE 0
+		END
+	) AS num_purchases
 FROM events e 
 JOIN event_identifier i ON e.event_type = i.event_type
 JOIN page_hierarchy p ON e.page_id = p.page_id
