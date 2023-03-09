@@ -1,8 +1,20 @@
+SET search_path = balanced_tree;
+
 -- High Level Sales Analysis
 
 --     What was the total quantity sold for all products?
+
+SELECT SUM(qty) FROM sales;
+
 --     What is the total generated revenue for all products before discounts?
+
+SELECT SUM(qty * price) FROM sales;
+
 --     What was the total discount amount for all products?
+
+SELECT
+	SUM(qty * price * (discount :: float / 100)) AS total_discount
+FROM sales;
 
 -- Transaction Analysis
 
