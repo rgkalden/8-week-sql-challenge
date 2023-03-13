@@ -90,6 +90,23 @@ GROUP BY member;
 -- Product Analysis
 
 --     What are the top 3 products by total revenue before discount?
+
+WITH product_revenues AS (
+SELECT
+	prod_id,
+	sum(qty * price) AS revenue
+FROM sales
+GROUP BY prod_id
+)
+
+SELECT
+	product_details.product_name,
+	revenue
+FROM product_revenues
+JOIN product_details ON product_details.product_id = product_revenues.prod_id
+ORDER BY revenue DESC
+LIMIT 3;
+
 --     What is the total quantity, revenue and discount for each segment?
 --     What is the top selling product for each segment?
 --     What is the total quantity, revenue and discount for each category?
