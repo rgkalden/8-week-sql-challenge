@@ -72,28 +72,20 @@ FROM sales;
 
 --     What is the average revenue for member transactions and non-member transactions?
 
-WITH revenue_members AS (
+WITH txn_revenues AS (
 	SELECT
 		txn_id,
-		SUM(qty * price * (1 - discount ::float / 100)) AS revenue
+		member,
+		sum(qty * price * (1 - discount ::float / 100)) AS revenue
 	FROM sales
-	WHERE member = true
-	GROUP BY txn_id
-),
-revenue_non_members AS (
-	SELECT
-		txn_id,
-		SUM(qty * price * (1 - discount ::float / 100)) AS revenue
-	FROM sales
-	WHERE member = false
-	GROUP BY txn_id
+	GROUP BY txn_id, member
 )
 
-SELECT AVG(revenue) FROM revenue_members
-
-UNION
-
-SELECT AVG(revenue) FROM revenue_non_members;
+SELECT
+	member,
+	AVG(revenue)
+FROM txn_revenues
+GROUP BY member;
 
 -- Product Analysis
 
