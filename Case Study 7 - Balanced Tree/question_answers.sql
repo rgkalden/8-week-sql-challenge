@@ -108,10 +108,101 @@ ORDER BY revenue DESC
 LIMIT 3;
 
 --     What is the total quantity, revenue and discount for each segment?
+
+WITH product_sales AS (
+	SELECT
+		segment_name,
+		product_name,
+		category_name,
+		prod_id,
+		qty,
+		sales.price,
+		discount,
+		member,
+		txn_id
+	FROM sales
+	JOIN product_details ON product_details.product_id = sales.prod_id
+)
+
+SELECT
+	segment_name,
+	SUM(qty) AS total_qty,
+	SUM(qty * price * (1 - discount ::float / 100)) AS total_revenue,
+	SUM(qty * price * (discount ::float / 100)) AS total_discounts
+FROM product_sales
+GROUP BY segment_name;
+
 --     What is the top selling product for each segment?
+
+WITH product_sales_rank AS (
+	SELECT
+		segment_name,
+		product_name,
+		SUM(qty) AS total_qty,
+		RANK() OVER (PARTITION BY segment_name ORDER BY SUM(qty) DESC) AS ranking
+	FROM sales
+	JOIN product_details ON product_details.product_id = sales.prod_id
+	GROUP BY segment_name, product_name
+)
+
+SELECT
+	segment_name,
+	product_name,
+	total_qty
+FROM product_sales_rank
+WHERE ranking = 1
+ORDER BY total_qty DESC;
+
 --     What is the total quantity, revenue and discount for each category?
+
+WITH product_sales AS (
+	SELECT
+		segment_name,
+		product_name,
+		category_name,
+		prod_id,
+		qty,
+		sales.price,
+		discount,
+		member,
+		txn_id
+	FROM sales
+	JOIN product_details ON product_details.product_id = sales.prod_id
+)
+
+SELECT
+	category_name,
+	SUM(qty) AS total_qty,
+	SUM(qty * price * (1 - discount ::float / 100)) AS total_revenue,
+	SUM(qty * price * (discount ::float / 100)) AS total_discounts
+FROM product_sales
+GROUP BY category_name;
+
 --     What is the top selling product for each category?
+
+WITH product_sales_rank AS (
+	SELECT
+		category_name,
+		product_name,
+		SUM(qty) AS total_qty,
+		RANK() OVER (PARTITION BY category_name ORDER BY SUM(qty) DESC) AS ranking
+	FROM sales
+	JOIN product_details ON product_details.product_id = sales.prod_id
+	GROUP BY category_name, product_name
+)
+
+SELECT
+	category_name,
+	product_name,
+	total_qty
+FROM product_sales_rank
+WHERE ranking = 1
+ORDER BY total_qty DESC;
+
 --     What is the percentage split of revenue by product for each segment?
+
+
+
 --     What is the percentage split of revenue by segment for each category?
 --     What is the percentage split of total revenue by category?
 --     What is the total transaction “penetration” for each product? (hint: penetration = number of transactions where at least 1 quantity of a product was purchased divided by total number of transactions)
