@@ -201,9 +201,87 @@ ORDER BY total_qty DESC;
 
 --     What is the percentage split of revenue by product for each segment?
 
+WITH product_sales AS (
+	SELECT
+		segment_name,
+		product_name,
+		category_name,
+		SUM(qty * sales.price * (1 - discount ::float / 100)) AS total_revenue
+	FROM sales
+	JOIN product_details ON product_details.product_id = sales.prod_id
+	GROUP BY segment_name, product_name, category_name
+)
 
+SELECT
+	segment_name,
+	product_name,
+	total_revenue,
+	(total_revenue / SUM(total_revenue) OVER (PARTITION BY segment_name)) * 100 AS percentage_split
+FROM product_sales
+GROUP BY segment_name, product_name, total_revenue
+ORDER BY segment_name, product_name;
 
 --     What is the percentage split of revenue by segment for each category?
+
+WITH product_sales AS (
+	SELECT
+		segment_name,
+		product_name,
+		category_name,
+		SUM(qty * sales.price * (1 - discount ::float / 100)) AS total_revenue
+	FROM sales
+	JOIN product_details ON product_details.product_id = sales.prod_id
+	GROUP BY category_name, segment_name, product_name
+),
+
+percentage_split AS (
+SELECT
+	category_name,
+	segment_name,
+	sum(total_revenue),
+	(total_revenue / SUM(total_revenue) OVER (PARTITION BY category_name)) * 100 AS percentage_split
+FROM product_sales
+GROUP BY category_name, segment_name, total_revenue
+)
+
+SELECT
+	category_name,
+	segment_name,
+	SUM(sum),
+	SUM(percentage_split)
+FROM percentage_split
+GROUP BY category_name, segment_name;
+
+
 --     What is the percentage split of total revenue by category?
+
+WITH product_sales AS (
+	SELECT
+		segment_name,
+		product_name,
+		category_name,
+		SUM(qty * sales.price * (1 - discount ::float / 100)) AS total_revenue
+	FROM sales
+	JOIN product_details ON product_details.product_id = sales.prod_id
+	GROUP BY segment_name, product_name, category_name
+),
+
+percentage_splits AS (
+
+SELECT
+	category_name,
+	SUM(total_revenue) AS total_revenue,
+	SUM(total_revenue) / SUM(total_revenue) OVER() AS percentage_split
+FROM product_sales
+GROUP BY category_name, total_revenue
+)
+
+SELECT
+	category_name,
+	SUM(total_revenue),
+	SUM(percentage_split) * 100 AS percentage_split
+FROM percentage_splits
+GROUP BY category_name;
+
 --     What is the total transaction “penetration” for each product? (hint: penetration = number of transactions where at least 1 quantity of a product was purchased divided by total number of transactions)
 --     What is the most common combination of at least 1 quantity of any 3 products in a 1 single transaction?
