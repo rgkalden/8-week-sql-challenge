@@ -10,6 +10,7 @@ Practice analyzing data with SQL through eight different case studies
 - [Case Study 4 - Data Bank](#case-study-4---data-bank)
 - [Case Study 5 - Data Mart](#case-study-5---data-mart)
 - [Case Study 6 - Clique Bait](#case-study-6---clique-bait)
+- [Case Study 7 - Balanced Tree](#case-study-7---balanced-tree)
 
 ## Background
 
@@ -400,3 +401,47 @@ Some ideas you might want to investigate further include:
 - Does clicking on an impression lead to higher purchase rates?
 - What is the uplift in purchase rate when comparing users who click on a campaign impression versus users who do not receive an impression? What if we compare them with users who just an impression but do not click?
 - What metrics can you use to quantify the success or failure of each campaign compared to eachother?
+
+
+
+## Case Study 7 - Balanced Tree
+
+Information on this case study can be found at [https://8weeksqlchallenge.com/case-study-7/](https://8weeksqlchallenge.com/case-study-7/). 
+
+### Problem Statement
+
+From the website:
+
+> Balanced Tree Clothing Company prides themselves on providing an optimised range of clothing and lifestyle wear for the modern adventurer!
+>
+>Danny, the CEO of this trendy fashion company has asked you to assist the team’s merchandising teams analyse their sales performance and generate a basic financial report to share with the wider business.
+
+### Questions
+
+High Level Sales Analysis
+
+-    What was the total quantity sold for all products?
+-    What is the total generated revenue for all products before discounts?
+-    What was the total discount amount for all products?
+
+Transaction Analysis
+
+ -   How many unique transactions were there?
+-  What is the average unique products purchased in each transaction?
+- What are the 25th, 50th and 75th percentile values for the revenue per transaction?
+-What is the average discount value per transaction?
+- What is the percentage split of all transactions for members vs non-members?
+ - What is the average revenue for member transactions and non-member transactions?
+
+Product Analysis
+
+- What are the top 3 products by total revenue before discount?
+- What is the total quantity, revenue and discount for each segment?
+- What is the top selling product for each segment?
+- What is the total quantity, revenue and discount for each category?
+- What is the top selling product for each category?
+- What is the percentage split of revenue by product for each segment?
+- What is the percentage split of revenue by segment for each category?
+- What is the percentage split of total revenue by category?
+- What is the total transaction “penetration” for each product? (hint: penetration = number of transactions where at least 1 quantity of a product was purchased divided by total number of transactions)
+- What is the most common combination of at least 1 quantity of any 3 products in a 1 single transaction?
